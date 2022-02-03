@@ -118,10 +118,10 @@ class Primatelj(Agent):
                     print(f"Ukupan rezultat: {self.agent.ukupanRezultat}")
 
                     poruka = "nova-igra"
-                    if(self.agent.ukupanRezultat[0] > 200):
+                    if(self.agent.ukupanRezultat[0] > 1001):
                         print("Pobijedio je tim 1, čestitamo")
                         poruka="gotova-igra"
-                    if(self.agent.ukupanRezultat[1] > 200):
+                    if(self.agent.ukupanRezultat[1] > 1001):
                         print("Pobijedio je tim 2, čestitamo")
                         poruka="gotova-igra"
                     sleep(3)
@@ -169,12 +169,13 @@ class Primatelj(Agent):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-jid", type=str, help="JID agenta", default="primatelj@rec.foi.hr")
-    parser.add_argument("-pwd", type=str, help="Lozinka agenta", default="tajna")
-    args = parser.parse_args()
+    #parser = argparse.ArgumentParser()
+    #parser.add_argument("-jid", type=str, help="JID agenta", default="primatelj@rec.foi.hr")
+    #parser.add_argument("-pwd", type=str, help="Lozinka agenta", default="tajna")
+    #args = parser.parse_args()
     
-    primatelj = Primatelj(args.jid, args.pwd)
+    #primatelj = Primatelj(args.jid, args.pwd)
+    primatelj = Primatelj("primatelj@rec.foi.hr", "tajna")
     future = primatelj.start()
     future.result()
 

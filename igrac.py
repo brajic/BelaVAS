@@ -85,8 +85,6 @@ class ExampleFSMBehaviour(FSMBehaviour):
 
 class StateOne(State):   #slaganje ekipe
     async def run(self):
-        #print("Id organizatora: ")
-        #id_organzitaor = input()
         id_organizator = "primatelj@rec.foi.hr"
         msg = Message(
             to=id_organizator,
