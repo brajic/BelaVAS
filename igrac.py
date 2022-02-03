@@ -1,20 +1,10 @@
-#from email.quoprimime import body_check
-#from tkinter.tix import Tree
-#from msilib.schema import SelfReg
 import spade
-from spade import agent
 from spade.agent import Agent
-from spade.behaviour import OneShotBehaviour, CyclicBehaviour, PeriodicBehaviour, FSMBehaviour, State
+from spade.behaviour import FSMBehaviour, State
 from spade.message import Message
-from spade.template import Template
-#from datetime import datetime, timedelta
-#import sys
 from time import sleep
 import argparse
-#from ast import For, literal_eval
 from random import shuffle
-
-from sqlalchemy import false, null, true
 
 
 STATE_ONE = "Slaganje ekipe"
@@ -93,7 +83,7 @@ class ExampleFSMBehaviour(FSMBehaviour):
         print(f"FSM finished at state {self.current_state}")
         await self.agent.stop()
 
-class StateOne(State):
+class StateOne(State):   #slaganje ekipe
     async def run(self):
         #print("Id organizatora: ")
         #id_organzitaor = input()
@@ -107,7 +97,6 @@ class StateOne(State):
                 "intent": "registriraj"}
         )
         await self.send(msg)
-        #await posaljiPoruku(self.agent, id_organizator, self.agent.jid, "registriraj")
         print("Čekam poruku sa popisom svih igrača...")
 
         msg = await self.receive(timeout=100)
@@ -120,23 +109,20 @@ class StateOne(State):
             igracListIndex = igraciList.index(f"{self.agent.jid}")
             if(igracListIndex == 1):
                 suigracID = igraciList[3]
-                #sljedeciIgracID = igraciList[2]
                 sljedeciIgracID = igraciList[0]
-                #sljedeciIgracID = igraciList[2]
             elif(igracListIndex == 2):
                 suigracID = igraciList[4]
                 sljedeciIgracID = igraciList[3]
-                #sljedeciIgracID = igraciList[1]
             elif(igracListIndex == 3):
                 suigracID = igraciList[1]
                 sljedeciIgracID = igraciList[4]
             elif(igracListIndex == 4):
                 suigracID = igraciList[2]
                 sljedeciIgracID = igraciList[1]
-            sleep(3) #kako bi svi igraci dobili poruku na vrijeme
+            sleep(3) 
         self.set_next_state(STATE_TWO)
 
-class StateTwo(State):
+class StateTwo(State):   #djeljenje karata
     async def run(self):
         
         if(str(self.agent.jid) == igraciList[1]):
@@ -162,13 +148,11 @@ class StateTwo(State):
             global karteIgracaAdut
             global karteIgracaOstale
             karteIgraca = eval(msg.body)
-            #karteIgraca = ['TD', 'KK', 'T9', 'TA', 'HD', 'TX', 'KA', 'HB']
-            #karteIgraca = ['KK', 'HD', 'KA', 'HB']
             print(f"Karte igraca {self.agent.jid} su {karteIgraca}")
             self.set_next_state(STATE_THREE)
         
 
-class StateThree(State):
+class StateThree(State):  #odabir aduta
     async def run(self):
         zadnjiIgrac = False
         global odabraniAdut
@@ -178,8 +162,6 @@ class StateThree(State):
             odabraniAdut = self.odaberiAdut(zadnjiIgrac)
             msg = Message(
                 to=igraciList[3],
-                #to=igraciList[1],
-                #body=str(odabraniAdut),
                 body=f"{[odabraniAdut,str(self.agent.jid)]}",
                 metadata={
                     "performative": "inform",
@@ -190,28 +172,16 @@ class StateThree(State):
         else:
             msg = await self.receive(timeout=100)
             if(msg.get_metadata("ontology") == "bela" and msg.get_metadata("intent") == "adut"):
-                print(f"Agent {self.agent.jid} primio poruku agenta: {msg.body}")
                 poruka = eval(msg.body)
-                #if(msg.body == "nema-aduta"):    
                 if(poruka[0] == "nema-aduta"):
                     if(str(self.agent.jid) == igraciList[1]):
                         zadnjiIgrac = True
                     odabraniAdut = self.odaberiAdut(zadnjiIgrac)
                 else:
                     odabraniAdut = poruka[0]
-                print(f"Odabrani adut je {odabraniAdut}")
 
-            #if(igracListIndex == 4):
-            #    sljedeciPrimatelj = igraciList[1]
-            #if(igracListIndex == 1):
-            #    sljedeciPrimatelj = igraciList[0]
-            #if(igracListIndex == 3):
-            #    sljedeciPrimatelj = igraciList[4]
-            #srediti za cetvero
             msg = Message(
-                #to=sljedeciPrimatelj,
                 to=sljedeciIgracID,
-                #body=str(odabraniAdut),
                 body=f"{[odabraniAdut,str(self.agent.jid)]}",
                 metadata={
                     "performative": "inform",
@@ -223,7 +193,7 @@ class StateThree(State):
         msg = await self.receive(timeout=100)
         if(msg.get_metadata("ontology") == "bela" and msg.get_metadata("intent") == "adut-final"):
             odabraniAdut = msg.body
-            print(f"Adut je {odabraniAdut}")
+            print(f"Na kraju je odabran adut {odabraniAdut}")
 
         global brojacRuku
         brojacRuku = 0
@@ -249,26 +219,27 @@ class StateThree(State):
             return "nema-aduta"
                 
 
-class StateFour(State):
+class StateFour(State):   #igranje ruke
     async def run(self):
         sleep(1)
         global brojacRuku
         igraneKarte = []
         if(brojacRuku == 0):    #potrebno pozvati samo na pocetku
             self.soritrajKarte()
+
+        print("Sve karte u ruci na pocetku igranja")
+        print(f"Karo karte: {self.karoKarte.sveKarteLista}")
+        print(f"Herc karte: {self.hercKarte.sveKarteLista}")
+        print(f"Pik karte:  {self.pikKarte.sveKarteLista}")
+        print(f"Tref karte: {self.trefKarte.sveKarteLista}")
+        print()
         
         if(brojacRuku < 8):
-            print("Sve karte u ruci")
-            print(f"Karo karte: {self.karoKarte.sveKarteLista}")
-            print(f"Herc karte: {self.hercKarte.sveKarteLista}")
-            print(f"Pik karte:  {self.pikKarte.sveKarteLista}")
-            print(f"Tref karte: {self.trefKarte.sveKarteLista}")
-            print()
+
 
             if(str(self.agent.jid) == igraciList[2]):
-                #sleep(1)
                 karta = self.odigrajPrvuKartu()
-                print(f"Odabrana je karta {karta}")
+                print(f"Agent odabrao kartu {karta}")
                 msg = Message(
                     to=sljedeciIgracID,
                     body=f"['{karta}']",
@@ -289,10 +260,11 @@ class StateFour(State):
                 msg = await self.receive(timeout=1000)
                 if(msg.get_metadata("ontology") == "bela" and msg.get_metadata("intent") == "igranje-karta"):
                     igraneKarte = eval(msg.body)
+                    print(f"Do sada igrane karte: {igraneKarte}")
                     karta = self.odigrajKartu(igraneKarte)
+                    print(f"Agent odabrao kartu {karta}")
                     igraneKarte.append(karta)
-                    print(f"Igrane karte: {igraneKarte}")
-
+                    
                     msg = Message(
                     to=sljedeciIgracID,
                     body=f"{igraneKarte}",
@@ -311,16 +283,7 @@ class StateFour(State):
     def odigrajKartu(self, odigraneKarte):
         zadnjaKartaVrijednost = odigraneKarte[-1][1]
         zadnjaKartaBoja = odigraneKarte[-1][:1]
-        #if(zadnjaKartaBoja == odabraniAdut): #promijeniti
-        #    karta = self.karteAdut.vratiJacuKartu(zadnjaKartaVrijednost)
-        #    if(karta != None):
-        #        self.karteAdut.makniIzRuke(karta[1])
-        #        return karta
-        #    karta = self.karteAdut.vratiNajslabijuKartu()
-        #    if(karta != None):
-        #        self.karteAdut.makniIzRuke(karta[1])
-        #        return karta
-        #
+
         for karteBoje in self.sveKarteURuci:
             if(karteBoje.boja == zadnjaKartaBoja):
                 odigranaBoja = karteBoje
@@ -338,7 +301,7 @@ class StateFour(State):
             self.karteAdut.makniIzRuke(karta[1])
             return karta
         ostaleBoje = self.sveKarteURuciOstale
-        #ostaleBoje.remove(odigranaBoja)
+
         for ostalaBoja in ostaleBoje:
             karta = ostalaBoja.vratiNajslabijuKartu()
             if(karta != None):
@@ -410,17 +373,18 @@ class StateFour(State):
                 karteBoja.azurirajStanjePrvaKarta(self.bodoviIgranjeOstali)
                 self.sveKarteURuciOstale.append(karteBoja)
 
-class StateFive(State):
+class StateFive(State):    #Bodovanje i rezultat
     async def run(self):
         msg = await self.receive(timeout=1000)
         if(msg.get_metadata("ontology") == "bela" and msg.get_metadata("intent") == "stanje-igre"):
             if(msg.body == "nova-igra"):
-                print("nastavljam igru")
+                print("Nastavljamo sa novim krugom igranja")
+                print("")
                 self.set_next_state(STATE_TWO)
             if(msg.body == "gotova-igra"):
                 self.set_next_state(STATE_SIX)
 
-class StateSix(State):
+class StateSix(State):    #Kraj igre
     async def run(self):
         print("Zahvaljujem na igranju :D")
 
@@ -452,8 +416,6 @@ if __name__ == '__main__':
     #parser.add_argument("-jid", type=str, help="JID agenta", default="ime@rec.foi.hr")
     #parser.add_argument("-pwd", type=str, help="Lozinka agenta", default="lozinka")
     args = parser.parse_args()
-
-    print(f"Jid: {args.jid}, pass: {args.pwd}")
 
     fsmagent = Igrac(args.jid, args.pwd)
     future = fsmagent.start()

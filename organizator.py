@@ -1,3 +1,4 @@
+import argparse
 import spade
 from spade.agent import Agent
 from spade.behaviour import TimeoutBehaviour, CyclicBehaviour, OneShotBehaviour
@@ -22,10 +23,6 @@ class Primatelj(Agent):
 
                 if self.agent.br_igraca == 4:
                     print("Sakupljeno je dovoljno igrača, započinjem igru...")
-                    #igraciDict = {'organizator': f"{self.agent.jid}", 'igrac1': f"{self.agent.igraci[0]}", 'igrac2': f"{self.agent.igraci[1]}", 'igrac3': f"{self.agent.igraci[2]}", 'igrac4': f"{self.agent.igraci[3]}"}
-                    #igraciDictStr = str(igraciDict)
-                    #igraciList = [f"{self.agent.jid}", f"{self.agent.igraci[0]}", f"{self.agent.igraci[1]}", "treci@foi.rec.hr", "cetvrti@foi.rec.hr"]
-                    #igraciListStr = str(igraciList)
                     self.agent.tim1 = [self.agent.igraci[0],self.agent.igraci[2]]
                     self.agent.tim2 = [self.agent.igraci[1],self.agent.igraci[3]]
                     self.igraciList = [f"{self.agent.jid}", f"{self.agent.igraci[0]}", f"{self.agent.igraci[1]}", f"{self.agent.igraci[2]}", f"{self.agent.igraci[3]}"]
@@ -129,7 +126,10 @@ class Primatelj(Agent):
                         poruka="gotova-igra"
                     sleep(3)
 
-                    print(f"Saljem nastavak igre sa porukom {poruka}")
+                    if(poruka == "nova-igra"):
+                        print("Timovi nemaju dovoljno bodova za pobjedu, nastavljamo sa igrom")
+                        print("")
+
                     for igrac_id in self.agent.igraci:
                         msg = Message(
                             to=igrac_id,
@@ -169,7 +169,12 @@ class Primatelj(Agent):
 
 
 if __name__ == '__main__':
-    primatelj = Primatelj("primatelj@rec.foi.hr", "tajna")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-jid", type=str, help="JID agenta", default="primatelj@rec.foi.hr")
+    parser.add_argument("-pwd", type=str, help="Lozinka agenta", default="tajna")
+    args = parser.parse_args()
+    
+    primatelj = Primatelj(args.jid, args.pwd)
     future = primatelj.start()
     future.result()
 
